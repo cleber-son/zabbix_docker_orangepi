@@ -1,6 +1,22 @@
 #!/bin/bash
+#
+# start.sh - Initialize Zabbix Docker environment
+#
+# Author: Cleberson Souza
+# Email: cleberson.brasil@gmail.com
+# Created: 2025-06-27
+# Version: 1.0.0
+#
+# Description:
+#   - Creates required folders and sets permissions
+#   - Brings down any existing containers
+#   - Builds and starts containers with docker-compose
+#
+# License: MIT
+#
+# -------------------------------
 
-echo "Verificando diretórios de dados..."
+echo "Checking required data directories..."
 
 mkdir -p ./data/mysql-server
 mkdir -p ./data/zabbix-server/alertscripts
@@ -8,15 +24,15 @@ mkdir -p ./data/zabbix-server/externalscripts
 mkdir -p ./data/zabbix-server/ssh_keys
 mkdir -p ./data/zabbix-server/zabbix-web
 
-echo "Aplicando permissões básicas aos scripts..."
+echo "Setting execution permission for scripts..."
 
 chmod +x ./data/zabbix-server/alertscripts/*.sh 2>/dev/null
 chmod +x ./data/zabbix-server/externalscripts/*.sh 2>/dev/null
 
-echo "Iniciando ambiente Zabbix com Docker..."
+echo "Starting Zabbix Docker environment..."
 
 docker-compose down
 docker-compose up -d --build
 
-echo "Ambiente iniciado com sucesso!"
-echo "Acesse a interface web em: http://localhost:8080"
+echo "Zabbix environment started successfully!"
+echo "Access the web interface at: http://localhost:8080"
