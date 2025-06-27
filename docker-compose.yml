@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  mysql-server:
+    image: mariadb:11.4
+    container_name: mysql-server
+    ports:
+      - "3306:3306"
+    environment:
+      - ZBX_SERVER_NAME=${ZBX_SERVER_NAME}
+      - ZBX_SERVER_HOST=${ZBX_SERVER_HOST}
+      - ZBX_SERVER_PORT=${ZBX_SERVER_PORT}
+      - DB_SERVER_HOST=${DB_SERVER_HOST}
+      - DB_SERVER_PORT=${DB_SERVER_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./data/mysql-server:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - network-zabbix
+
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:latest
+    container_name: ${ZBX_SERVER}
+    environment:
+      DB_SERVER_HOST: ${DB_SERVER_HOST}
+      DB_SERVER_PORT: ${DB_SERVER_PORT}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./data/zabbix-server:/var/lib/zabbix
+      - ./data/zabbix-server/alertscripts:/usr/lib/zabbix/alertscripts
+      - ./data/zabbix-server/externalscripts:/usr/lib/zabbix/externalscripts
+    depends_on:
+      - mysql-server
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10051"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - network-zabbix
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:latest
+    container_name: zabbix-web
+    environment:
+      DB_SERVER_HOST: ${DB_SERVER_HOST}
+      DB_SERVER_PORT: ${DB_SERVER_PORT}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
+      PHP_TZ: America/Sao_Paulo
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./data/zabbix-server/zabbix-web:/etc/ssl/nginx
+    depends_on:
+      - zabbix-server
+    restart: always
+    networks:
+      - network-zabbix
+
+volumes:
+  mysql-server:
+  zabbix-server:
+  zabbix-web:
+
+networks:
+  network-zabbix:
+    driver: bridge
