@@ -1,38 +1,74 @@
 #!/bin/bash
 #
-# start.sh - Initialize Zabbix Docker environment
+# start.sh - Manage Zabbix Docker environment on Orange Pi
 #
 # Author: Cleberson Souza
 # Email: cleberson.brasil@gmail.com
 # Created: 2025-06-27
-# Version: 1.0.0
+# Version: 1.1.0
 #
 # Description:
-#   - Creates required folders and sets permissions
-#   - Brings down any existing containers
-#   - Builds and starts containers with docker-compose
+#   - Allows starting, stopping, and restarting Zabbix containers
+#   - Prepares necessary directories and permissions
 #
 # License: MIT
 #
+
 # -------------------------------
 
-echo "Checking required data directories..."
+DATA_DIR="./data"
 
-mkdir -p ./data/mysql-server
-mkdir -p ./data/zabbix-server/alertscripts
-mkdir -p ./data/zabbix-server/externalscripts
-mkdir -p ./data/zabbix-server/ssh_keys
-mkdir -p ./data/zabbix-server/zabbix-web
+prepare_directories() {
+  echo "Creating necessary directories if they don't exist..."
 
-echo "Setting execution permission for scripts..."
+  mkdir -p ${DATA_DIR}/mysql-server
+  mkdir -p ${DATA_DIR}/zabbix-server/alertscripts
+  mkdir -p ${DATA_DIR}/zabbix-server/externalscripts
+  mkdir -p ${DATA_DIR}/zabbix-server/ssh_keys
+  mkdir -p ${DATA_DIR}/zabbix-server/zabbix-web
+}
 
-chmod +x ./data/zabbix-server/alertscripts/*.sh 2>/dev/null
-chmod +x ./data/zabbix-server/externalscripts/*.sh 2>/dev/null
+set_permissions() {
+  echo "Setting execute permissions for alert and external scripts..."
 
-echo "Starting Zabbix Docker environment..."
+  chmod +x ${DATA_DIR}/zabbix-server/alertscripts/*.sh 2>/dev/null
+  chmod +x ${DATA_DIR}/zabbix-server/externalscripts/*.sh 2>/dev/null
+}
 
-docker-compose down
-docker-compose up -d --build
+start_environment() {
+  echo "Starting Zabbix Docker environment..."
+  docker-compose up -d --build
+  echo "Zabbix is now running. Access the web UI at http://localhost:8080"
+}
 
-echo "Zabbix environment started successfully!"
-echo "Access the web interface at: http://localhost:8080"
+stop_environment() {
+  echo "Stopping and removing all Zabbix containers..."
+  docker-compose down
+  echo "Containers stopped."
+}
+
+restart_environment() {
+  stop_environment
+  start_environment
+}
+
+# Main logic
+case "$1" in
+  start)
+    prepare_directories
+    set_permissions
+    start_environment
+    ;;
+  stop)
+    stop_environment
+    ;;
+  restart)
+    prepare_directories
+    set_permissions
+    restart_environment
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
