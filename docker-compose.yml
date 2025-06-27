@@ -28,14 +28,16 @@ services:
       - network-zabbix
 
   zabbix-server:
-    image: zabbix/zabbix-server-mysql:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ${ZBX_SERVER}
     environment:
-      DB_SERVER_HOST: ${DB_SERVER_HOST}
-      DB_SERVER_PORT: ${DB_SERVER_PORT}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      - DB_SERVER_HOST=${DB_SERVER_HOST}
+      - DB_SERVER_PORT=${DB_SERVER_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - ./data/zabbix-server:/var/lib/zabbix
       - ./data/zabbix-server/alertscripts:/usr/lib/zabbix/alertscripts
@@ -52,16 +54,16 @@ services:
       - network-zabbix
 
   zabbix-web:
-    image: zabbix/zabbix-web-nginx-mysql:latest
+    image: zabbix/zabbix-web-nginx-mysql:7.2-ubuntu-latest
     container_name: zabbix-web
     environment:
-      DB_SERVER_HOST: ${DB_SERVER_HOST}
-      DB_SERVER_PORT: ${DB_SERVER_PORT}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
-      PHP_TZ: America/Sao_Paulo
+      - DB_SERVER_HOST=${DB_SERVER_HOST}
+      - DB_SERVER_PORT=${DB_SERVER_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - ZBX_SERVER_HOST=${ZBX_SERVER_HOST}
+      - PHP_TZ=America/Sao_Paulo
     ports:
       - "8080:8080"
       - "8443:8443"
